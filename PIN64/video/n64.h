@@ -7,7 +7,8 @@
 #include <memory>
 #include "rdptpipe.h"
 #include "rdpblend.h"
-#include "../pin64.h"
+#include "../pin64/pin64.h"
+#include "../pin64/block.h"
 
 /*****************************************************************************/
 
@@ -134,7 +135,7 @@ class n64_rdp {
 public:
 	n64_rdp(uint32_t* rdram);
 
-	void init_internal_state() {
+	void init_internal_state(pin64_t* capture) {
 		m_tmem = std::make_unique<uint8_t[]>(0x1000);
 		memset(m_tmem.get(), 0, 0x1000);
 
@@ -165,29 +166,38 @@ public:
 			m_tiles[i].invmm = rgbaint_t(~0, ~0, ~0, ~0);
 			m_tiles[i].invmask = rgbaint_t(~0, ~0, ~0, ~0);
 		}
+
+		set_capture(capture);
 	}
 
-	uint32_t vi_origin() { return m_capture.vi_origin(); }
+	void set_capture(pin64_t* capture) {
+		m_capture = capture;
+	}
+
+	uint32_t vi_origin() { return m_capture->vi_origin(); }
+	bool		commands_available() const { return m_capture->commands_left() > 0; }
 	void        process_command_list();
-	uint64_t      read_data(uint32_t address);
-	void        disassemble(char* buffer);
+	void		process_command();
+	void		reset();
+	uint64_t    read_data(uint32_t address);
+	void        disassemble(char* buffer, size_t buf_size);
 
 	// CPU-visible registers
 	void        set_start(uint32_t val) { m_start = val; }
-	uint32_t      get_start() const { return m_start; }
+	uint32_t    get_start() const { return m_start; }
 
 	void        set_end(uint32_t val) { m_end = val; }
-	uint32_t      get_end() const { return m_end; }
+	uint32_t    get_end() const { return m_end; }
 
 	void        set_current(uint32_t val) { m_current = val; }
-	uint32_t      get_current() const { return m_current; }
+	uint32_t    get_current() const { return m_current; }
 
 	void        set_status(uint32_t val) { m_status = val; }
-	uint32_t      get_status() const { return m_status; }
+	uint32_t    get_status() const { return m_status; }
 
 	// Color Combiner
-	int32_t       color_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d);
-	int32_t       alpha_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d);
+	int32_t     color_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d);
+	int32_t     alpha_combiner_equation(int32_t a, int32_t b, int32_t c, int32_t d);
 	void        set_suba_input_rgb(color_t** input, int32_t code);
 	void        set_subb_input_rgb(color_t** input, int32_t code);
 	void        set_mul_input_rgb(color_t** input, int32_t code);
@@ -196,9 +206,9 @@ public:
 	void        set_mul_input_alpha(color_t** input, int32_t code);
 
 	// Texture memory
-	uint8_t*      get_tmem8() { return m_tmem.get(); }
-	uint16_t*     get_tmem16() { return (uint16_t*)m_tmem.get(); }
-	uint32_t*     get_tmem32() { return (uint32_t*)m_tmem.get(); }
+	uint8_t*    get_tmem8() { return m_tmem.get(); }
+	uint16_t*   get_tmem16() { return (uint16_t*)m_tmem.get(); }
+	uint32_t*	get_tmem32() { return (uint32_t*)m_tmem.get(); }
 
 	// YUV Factors
 	void        set_yuv_factors(color_t k023, color_t k1, color_t k4, color_t k5) { m_k023 = k023; m_k1 = k1; m_k4 = k4; m_k5 = k5; }
@@ -218,7 +228,6 @@ public:
 	void        tc_div(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 	void        tc_div_no_perspective(int32_t ss, int32_t st, int32_t sw, int32_t* sss, int32_t* sst);
 	uint32_t    get_log2(uint32_t lod_clamp);
-	void        render_span(int32_t scanline, bool flip, int tilenum);
 	int32_t     get_alpha_cvg(int32_t comb_alpha);
 
 	void        z_store(uint32_t zcurpixel, uint32_t dzcurpixel, uint32_t z, uint32_t enc);
@@ -270,17 +279,15 @@ public:
 	void        rgbaz_clip(int32_t sr, int32_t sg, int32_t sb, int32_t sa, int32_t* sz);
 	void        rgbaz_correct_triangle(int32_t offx, int32_t offy, int32_t* r, int32_t* g, int32_t* b, int32_t* a, int32_t* z);
 
-	void        triangle(bool shade, bool texture, bool zbuffer);
-
 	void        get_dither_values(int32_t x, int32_t y, int32_t* cdith, int32_t* adith);
 
-	uint16_t decompress_cvmask_frombyte(uint8_t x);
-	void lookup_cvmask_derivatives(uint32_t mask, uint8_t* offx, uint8_t* offy);
+	uint16_t	decompress_cvmask_frombyte(uint8_t x);
+	void		lookup_cvmask_derivatives(uint32_t mask, uint8_t* offx, uint8_t* offy);
 
-	void screen_update(uint32_t* outbuf);
-	void video_update(uint32_t* outbuf);
-	void video_update16(uint32_t* outbuf);
-	void video_update32(uint32_t* outbuf);
+	void		screen_update(uint32_t* outbuf);
+	void		video_update(uint32_t* outbuf);
+	void		video_update16(uint32_t* outbuf);
+	void		video_update32(uint32_t* outbuf);
 	
 	misc_state_t m_misc_state;
 	uint32_t	m_vi_control;
@@ -363,7 +370,7 @@ public:
 
 	bool m_start_span;
 
-	pin64_t m_capture;
+	pin64_t* m_capture;
 
 private:
 	void    compute_cvg_noflip(int32_t* majorx, int32_t* minorx, int32_t* majorxint, int32_t* minorxint, int32_t scanline, int32_t yh, int32_t yl, int32_t base);
@@ -384,7 +391,6 @@ private:
 
 	combine_modes_t m_combine;
 	bool            m_pending_mode_block;
-	bool            m_pipe_clean;
 
 	cv_mask_derivative_t cvarray[(1 << 8)];
 
@@ -435,6 +441,7 @@ private:
 	static const char* s_image_format[];
 	static const char* s_image_size[];
 
+	static const size_t s_element_buf_size;
 public:
 	bool ignore;
 	bool dolog;

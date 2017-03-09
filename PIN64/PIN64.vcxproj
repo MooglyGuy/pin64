@@ -141,8 +141,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\3rdparty\SDL2-2.0.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PIN64_STANDALONE_BUILD;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\3rdparty\CRCpp;..\3rdparty\zlib-1.2.11;..\3rdparty\SDL2-2.0.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,7 +158,12 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pin64.cpp" />
+    <ClCompile Include="pin64\block.cpp" />
+    <ClCompile Include="pin64\data.cpp" />
+    <ClCompile Include="pin64\pin64.cpp" />
+    <ClCompile Include="pin64\printer.cpp" />
+    <ClCompile Include="pin64\verifier.cpp" />
+    <ClCompile Include="pin64\writer.cpp" />
     <ClCompile Include="video\n64.cpp" />
     <ClCompile Include="video\rdpblend.cpp" />
     <ClCompile Include="video\rdptpipe.cpp" />
@@ -169,7 +174,12 @@
     <ClInclude Include="EventDispatcher.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Logger.h" />
-    <ClInclude Include="pin64.h" />
+    <ClInclude Include="pin64\block.h" />
+    <ClInclude Include="pin64\data.h" />
+    <ClInclude Include="pin64\pin64.h" />
+    <ClInclude Include="pin64\printer.h" />
+    <ClInclude Include="pin64\verifier.h" />
+    <ClInclude Include="pin64\writer.h" />
     <ClInclude Include="strformat.h" />
     <ClInclude Include="video\n64.h" />
     <ClInclude Include="video\n64types.h" />

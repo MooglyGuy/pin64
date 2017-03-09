@@ -92,21 +92,14 @@ void n64_rdp::screen_update(uint32_t* outbuf) {
 
 void n64_rdp::video_update(uint32_t* outbuf) {
 
-	//if (m_capture.vi_control() & 0x40) /* Interlace */
+	//if (m_capture->vi_control() & 0x40) /* Interlace */
 	//{
 	//	field ^= 1;
 	//} else {
 	//	field = 0;
 	//}
 
-	if (!m_capture.playing()) {
-		m_capture.play(0);
-	} else {
-		process_command_list();
-		m_capture.mark_frame(running_machine());
-	}
-
-	switch (m_capture.vi_control() & 0x3) {
+	switch (m_capture->vi_control() & 0x3) {
 	case PIXEL_SIZE_16BIT:
 		video_update16(outbuf);
 		break;
@@ -122,25 +115,25 @@ void n64_rdp::video_update(uint32_t* outbuf) {
 }
 
 void n64_rdp::video_update16(uint32_t* outbuf) {
-	//int32_t fsaa = (((m_capture.vi_control() >> 8) & 3) < 2);
-	//int32_t divot = (m_capture.vi_control() >> 4) & 1;
+	//int32_t fsaa = (((m_capture->vi_control() >> 8) & 3) < 2);
+	//int32_t divot = (m_capture->vi_control() >> 4) & 1;
 
 	//uint32_t prev_cvg = 0;
 	//uint32_t next_cvg = 0;
-	//int32_t dither_filter = (m_capture.vi_control() >> 16) & 1;
-	//int32_t vibuffering = ((m_capture.vi_control() & 2) && fsaa && divot);
+	//int32_t dither_filter = (m_capture->vi_control() >> 16) & 1;
+	//int32_t vibuffering = ((m_capture->vi_control() & 2) && fsaa && divot);
 
-	uint16_t* frame_buffer = (uint16_t*)&m_rdram[(m_capture.vi_origin() & 0xffffff) >> 2];
+	uint16_t* frame_buffer = (uint16_t*)&m_rdram[(m_capture->vi_origin() & 0xffffff) >> 2];
 	//uint32_t hb = ((n64->vi_origin & 0xffffff) >> 2) >> 1;
 	//uint8_t* hidden_buffer = &m_hidden_bits[hb];
 
-	int32_t hdiff = (m_capture.vi_hstart() & 0x3ff) - ((m_capture.vi_hstart() >> 16) & 0x3ff);
-	float hcoeff = ((float)(m_capture.vi_xscale() & 0xfff) / (1 << 10));
+	int32_t hdiff = (m_capture->vi_hstart() & 0x3ff) - ((m_capture->vi_hstart() >> 16) & 0x3ff);
+	float hcoeff = ((float)(m_capture->vi_xscale() & 0xfff) / (1 << 10));
 	uint32_t hres = (uint32_t)((float)hdiff * hcoeff);
-	int32_t invisiblewidth = m_capture.vi_width() - hres;
+	int32_t invisiblewidth = m_capture->vi_width() - hres;
 
-	int32_t vdiff = ((m_capture.vi_vstart() & 0x3ff) - ((m_capture.vi_vstart() >> 16) & 0x3ff)) >> 1;
-	float vcoeff = ((float)(m_capture.vi_yscale() & 0xfff) / (1 << 10));
+	int32_t vdiff = ((m_capture->vi_vstart() & 0x3ff) - ((m_capture->vi_vstart() >> 16) & 0x3ff)) >> 1;
+	float vcoeff = ((float)(m_capture->vi_yscale() & 0xfff) / (1 << 10));
 	uint32_t vres = (uint32_t)((float)vdiff * vcoeff);
 
 	if (vdiff <= 0 || hdiff <= 0) {
@@ -179,19 +172,19 @@ void n64_rdp::video_update16(uint32_t* outbuf) {
 }
 
 void n64_rdp::video_update32(uint32_t* outbuf) {
-	int32_t gamma = (m_capture.vi_control() >> 3) & 1;
-	int32_t gamma_dither = (m_capture.vi_control() >> 2) & 1;
-	//int32_t vibuffering = ((m_capture.vi_control() & 2) && fsaa && divot);
+	int32_t gamma = (m_capture->vi_control() >> 3) & 1;
+	int32_t gamma_dither = (m_capture->vi_control() >> 2) & 1;
+	//int32_t vibuffering = ((m_capture->vi_control() & 2) && fsaa && divot);
 
-	uint32_t* frame_buffer = (uint32_t*)&m_rdram[(m_capture.vi_origin() & 0xffffff) >> 2];
+	uint32_t* frame_buffer = (uint32_t*)&m_rdram[(m_capture->vi_origin() & 0xffffff) >> 2];
 
-	const int32_t hdiff = (m_capture.vi_hstart() & 0x3ff) - ((m_capture.vi_hstart() >> 16) & 0x3ff);
-	const float hcoeff = ((float)(m_capture.vi_xscale() & 0xfff) / (1 << 10));
+	const int32_t hdiff = (m_capture->vi_hstart() & 0x3ff) - ((m_capture->vi_hstart() >> 16) & 0x3ff);
+	const float hcoeff = ((float)(m_capture->vi_xscale() & 0xfff) / (1 << 10));
 	uint32_t hres = (uint32_t)((float)hdiff * hcoeff);
-	int32_t invisiblewidth = m_capture.vi_width() - hres;
+	int32_t invisiblewidth = m_capture->vi_width() - hres;
 
-	const int32_t vdiff = ((m_capture.vi_vstart() & 0x3ff) - ((m_capture.vi_vstart() >> 16) & 0x3ff)) >> 1;
-	const float vcoeff = ((float)(m_capture.vi_yscale() & 0xfff) / (1 << 10));
+	const int32_t vdiff = ((m_capture->vi_vstart() & 0x3ff) - ((m_capture->vi_vstart() >> 16) & 0x3ff)) >> 1;
+	const float vcoeff = ((float)(m_capture->vi_yscale() & 0xfff) / (1 << 10));
 	const uint32_t vres = (uint32_t)((float)vdiff * vcoeff);
 
 	if (vdiff <= 0 || hdiff <= 0) {
@@ -942,6 +935,8 @@ uint64_t n64_rdp::read_data(uint32_t address) {
 const char* n64_rdp::s_image_format[] = { "RGBA", "YUV", "CI", "IA", "I", "???", "???", "???" };
 const char* n64_rdp::s_image_size[] = { "4-bit", "8-bit", "16-bit", "32-bit" };
 
+const size_t n64_rdp::s_element_buf_size = 32;
+
 const uint32_t n64_rdp::s_rdp_command_length[64] =
 {
 	8,          // 0x00, No Op
@@ -1010,7 +1005,7 @@ const uint32_t n64_rdp::s_rdp_command_length[64] =
 	8           // 0x3f, Set_Color_Image
 };
 
-void n64_rdp::disassemble(char* buffer) {
+void n64_rdp::disassemble(char* buffer, size_t buf_size) {
 	char sl[32], tl[32], sh[32], th[32];
 	char s[32], t[32], w[32];
 	char dsdx[32], dtdx[32], dwdx[32];
@@ -1027,17 +1022,17 @@ void n64_rdp::disassemble(char* buffer) {
 
 	const uint32_t length = m_cmd_ptr * 8;
 	if (length < 8) {
-		sprintf(buffer, "ERROR: length = %d\n", length);
+		snprintf(buffer, buf_size, "ERROR: length = %d\n", length);
 		return;
 	}
 
 	cmd[0] = m_cmd_data[m_cmd_cur];
 
 	const int32_t tile = (cmd[0] >> 56) & 0x7;
-	sprintf(sl, "%4.2f", (float)((cmd[0] >> 44) & 0xfff) / 4.0f);
-	sprintf(tl, "%4.2f", (float)((cmd[0] >> 32) & 0xfff) / 4.0f);
-	sprintf(sh, "%4.2f", (float)((cmd[0] >> 12) & 0xfff) / 4.0f);
-	sprintf(th, "%4.2f", (float)((cmd[0] >> 0) & 0xfff) / 4.0f);
+	snprintf(sl, s_element_buf_size, "%4.2f", (float)((cmd[0] >> 44) & 0xfff) / 4.0f);
+	snprintf(tl, s_element_buf_size, "%4.2f", (float)((cmd[0] >> 32) & 0xfff) / 4.0f);
+	snprintf(sh, s_element_buf_size, "%4.2f", (float)((cmd[0] >> 12) & 0xfff) / 4.0f);
+	snprintf(th, s_element_buf_size, "%4.2f", (float)((cmd[0] >> 0) & 0xfff) / 4.0f);
 
 	const char* format = s_image_format[(cmd[0] >> 53) & 0x7];
 	const char* size = s_image_size[(cmd[0] >> 51) & 0x3];
@@ -1049,13 +1044,13 @@ void n64_rdp::disassemble(char* buffer) {
 
 	const uint32_t command = (cmd[0] >> 56) & 0x3f;
 	switch (command) {
-	case 0x00:  sprintf(buffer, "No Op"); break;
+	case 0x00:  snprintf(buffer, buf_size, "No Op"); break;
 	case 0x08:      // Tri_NoShade
 	{
 		const int32_t lft = (cmd[0] >> 55) & 0x1;
 
 		if (length != s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_NoShade length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_NoShade length = %d\n", length);
 			return;
 		}
 
@@ -1063,17 +1058,17 @@ void n64_rdp::disassemble(char* buffer) {
 		cmd[2] = m_cmd_data[m_cmd_cur + 2];
 		cmd[3] = m_cmd_data[m_cmd_cur + 3];
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(buffer, "Tri_NoShade            %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
+		snprintf(buffer, buf_size, "Tri_NoShade            %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
 		break;
 	}
 	case 0x09:      // Tri_NoShadeZ
@@ -1081,7 +1076,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (cmd[0] >> 55) & 0x1;
 
 		if (length != s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_NoShadeZ length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_NoShadeZ length = %d\n", length);
 			return;
 		}
 
@@ -1089,17 +1084,17 @@ void n64_rdp::disassemble(char* buffer) {
 		cmd[2] = m_cmd_data[m_cmd_cur + 2];
 		cmd[3] = m_cmd_data[m_cmd_cur + 3];
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(buffer, "Tri_NoShadeZ            %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
+		snprintf(buffer, buf_size, "Tri_NoShadeZ            %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
 		break;
 	}
 	case 0x0a:      // Tri_Tex
@@ -1107,7 +1102,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (cmd[0] >> 55) & 0x1;
 
 		if (length < s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_Tex length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_Tex length = %d\n", length);
 			return;
 		}
 
@@ -1115,38 +1110,43 @@ void n64_rdp::disassemble(char* buffer) {
 			cmd[i] = m_cmd_data[m_cmd_cur + i];
 		}
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(s, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(t, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(w, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(s, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(t, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(w, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
 
-		buffer += sprintf(buffer, "Tri_Tex               %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       S: %s, T: %s, W: %s\n", s, t, w);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDX: %s, DTDX: %s, DWDX: %s\n", dsdx, dtdx, dwdx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDE: %s, DTDE: %s, DWDE: %s\n", dsde, dtde, dwde);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDY: %s, DTDY: %s, DWDY: %s\n", dsdy, dtdy, dwdy);
+		snprintf(buffer, buf_size, "Tri_Tex               %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n"
+		                           "                              "
+		                           "                       S: %s, T: %s, W: %s\n"
+		                           "                              "
+		                           "                       DSDX: %s, DTDX: %s, DWDX: %s\n"
+		                           "                              "
+		                           "                       DSDE: %s, DTDE: %s, DWDE: %s\n"
+		                           "                              "
+		                           "                       DSDY: %s, DTDY: %s, DWDY: %s\n",
+			lft, xl, xm, xh, yl, ym, yh,
+			s, t, w,
+			dsdx, dtdx, dwdx,
+			dsde, dtde, dwde,
+			dsdy, dtdy, dwdy);
 		break;
 	}
 	case 0x0b:      // Tri_TexZ
@@ -1154,7 +1154,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (cmd[0] >> 55) & 0x1;
 
 		if (length < s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_TexZ length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_TexZ length = %d\n", length);
 			return;
 		}
 
@@ -1162,38 +1162,43 @@ void n64_rdp::disassemble(char* buffer) {
 			cmd[i] = m_cmd_data[m_cmd_cur + i];
 		}
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(s, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(t, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(w, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
-
-		buffer += sprintf(buffer, "Tri_TexZ               %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       S: %s, T: %s, W: %s\n", s, t, w);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDX: %s, DTDX: %s, DWDX: %s\n", dsdx, dtdx, dwdx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDE: %s, DTDE: %s, DWDE: %s\n", dsde, dtde, dwde);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDY: %s, DTDY: %s, DWDY: %s\n", dsdy, dtdy, dwdy);
+		snprintf(s, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(t, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(w, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		
+		snprintf(buffer, buf_size, "Tri_TexZ               %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n"
+			"                              "
+			"                       S: %s, T: %s, W: %s\n"
+			"                              "
+			"                       DSDX: %s, DTDX: %s, DWDX: %s\n"
+			"                              "
+			"                       DSDE: %s, DTDE: %s, DWDE: %s\n"
+			"                              "
+			"                       DSDY: %s, DTDY: %s, DWDY: %s\n",
+			lft, xl, xm, xh, yl, ym, yh,
+			s, t, w,
+			dsdx, dtdx, dwdx,
+			dsde, dtde, dwde,
+			dsdy, dtdy, dwdy);
 		break;
 	}
 	case 0x0c:      // Tri_Shade
@@ -1201,7 +1206,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (command >> 23) & 0x1;
 
 		if (length != s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_Shade length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_Shade length = %d\n", length);
 			return;
 		}
 
@@ -1209,42 +1214,47 @@ void n64_rdp::disassemble(char* buffer) {
 			cmd[i] = m_cmd_data[i];
 		}
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(rt, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(gt, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(bt, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(at, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
-		sprintf(drdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dadx, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
-		sprintf(drde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dade, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
-		sprintf(drdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dady, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
+		snprintf(rt, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(gt, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(bt, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(at, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
+		snprintf(drdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dadx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
+		snprintf(drde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dade, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
+		snprintf(drdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dady, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
 
-		buffer += sprintf(buffer, "Tri_Shade              %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       R: %s, G: %s, B: %s, A: %s\n", rt, gt, bt, at);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n", drdx, dgdx, dbdx, dadx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n", drde, dgde, dbde, dade);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n", drdy, dgdy, dbdy, dady);
+		snprintf(buffer, buf_size, "Tri_Shade              %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n"
+			"                              "
+			"                       R: %s, G: %s, B: %s, A: %s\n"
+			"                              "
+			"                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n"
+			"                              "
+			"                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n"
+			"                              "
+			"                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n",
+			lft, xl, xm, xh, yl, ym, yh,
+			rt, gt, bt, at,
+			drdx, dgdx, dbdx, dadx,
+			drde, dgde, dbde, dade,
+			drdy, dgdy, dbdy, dady);
 		break;
 	}
 	case 0x0d:      // Tri_ShadeZ
@@ -1252,7 +1262,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (command >> 23) & 0x1;
 
 		if (length != s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_ShadeZ length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_ShadeZ length = %d\n", length);
 			return;
 		}
 
@@ -1260,42 +1270,47 @@ void n64_rdp::disassemble(char* buffer) {
 			cmd[i] = m_cmd_data[i];
 		}
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(rt, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(gt, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(bt, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(at, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
-		sprintf(drdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dadx, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
-		sprintf(drde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dade, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
-		sprintf(drdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dady, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
+		snprintf(rt, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(gt, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(bt, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(at, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
+		snprintf(drdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dadx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
+		snprintf(drde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dade, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
+		snprintf(drdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dady, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
 
-		buffer += sprintf(buffer, "Tri_ShadeZ              %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       R: %s, G: %s, B: %s, A: %s\n", rt, gt, bt, at);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n", drdx, dgdx, dbdx, dadx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n", drde, dgde, dbde, dade);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n", drdy, dgdy, dbdy, dady);
+		snprintf(buffer, buf_size, "Tri_ShadeZ             %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n"
+			"                              "
+			"                       R: %s, G: %s, B: %s, A: %s\n"
+			"                              "
+			"                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n"
+			"                              "
+			"                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n"
+			"                              "
+			"                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n",
+			lft, xl, xm, xh, yl, ym, yh,
+			rt, gt, bt, at,
+			drdx, dgdx, dbdx, dadx,
+			drde, dgde, dbde, dade,
+			drdy, dgdy, dbdy, dady);
 		break;
 	}
 	case 0x0e:      // Tri_TexShade
@@ -1303,7 +1318,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (command >> 23) & 0x1;
 
 		if (length < s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_TexShade length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_TexShade length = %d\n", length);
 			return;
 		}
 
@@ -1311,64 +1326,72 @@ void n64_rdp::disassemble(char* buffer) {
 			cmd[i] = m_cmd_data[m_cmd_cur + i];
 		}
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(rt, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(gt, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(bt, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(at, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
-		sprintf(drdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dadx, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
-		sprintf(drde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dade, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
-		sprintf(drdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dady, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
+		snprintf(rt, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(gt, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(bt, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(at, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
+		snprintf(drdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dadx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
+		snprintf(drde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dade, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
+		snprintf(drdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dady, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
 
-		sprintf(s, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(t, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(w, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(s, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(t, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(w, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
 
-		buffer += sprintf(buffer, "Tri_TexShade           %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       R: %s, G: %s, B: %s, A: %s\n", rt, gt, bt, at);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n", drdx, dgdx, dbdx, dadx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n", drde, dgde, dbde, dade);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n", drdy, dgdy, dbdy, dady);
-
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       S: %s, T: %s, W: %s\n", s, t, w);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDX: %s, DTDX: %s, DWDX: %s\n", dsdx, dtdx, dwdx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDE: %s, DTDE: %s, DWDE: %s\n", dsde, dtde, dwde);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDY: %s, DTDY: %s, DWDY: %s\n", dsdy, dtdy, dwdy);
+		snprintf(buffer, buf_size, "Tri_TexShade           %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n"
+			"                              "
+			"                       R: %s, G: %s, B: %s, A: %s\n"
+			"                              "
+			"                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n"
+			"                              "
+			"                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n"
+			"                              "
+			"                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n"
+			"                              "
+			"                       S: %s, T: %s, W: %s\n"
+			"                              "
+			"                       DSDX: %s, DTDX: %s, DWDX: %s\n"
+			"                              "
+			"                       DSDE: %s, DTDE: %s, DWDE: %s\n"
+			"                              "
+			"                       DSDY: %s, DTDY: %s, DWDY: %s\n",
+			lft, xl, xm, xh, yl, ym, yh,
+			rt, gt, bt, at,
+			drdx, dgdx, dbdx, dadx,
+			drde, dgde, dbde, dade,
+			drdy, dgdy, dbdy, dady,
+			s, t, w,
+			dsdx, dtdx, dwdx,
+			dsde, dtde, dwde,
+			dsdy, dtdy, dwdy);
 		break;
 	}
 	case 0x0f:      // Tri_TexShadeZ
@@ -1376,7 +1399,7 @@ void n64_rdp::disassemble(char* buffer) {
 		const int32_t lft = (command >> 23) & 0x1;
 
 		if (length < s_rdp_command_length[command]) {
-			sprintf(buffer, "ERROR: Tri_TexShadeZ length = %d\n", length);
+			snprintf(buffer, buf_size, "ERROR: Tri_TexShadeZ length = %d\n", length);
 			return;
 		}
 
@@ -1384,64 +1407,72 @@ void n64_rdp::disassemble(char* buffer) {
 			cmd[i] = m_cmd_data[m_cmd_cur + i];
 		}
 
-		sprintf(yl, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
-		sprintf(ym, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
-		sprintf(yh, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
-		sprintf(xl, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
-		sprintf(dxldy, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
-		sprintf(xh, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
-		sprintf(dxhdy, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
-		sprintf(xm, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
-		sprintf(dxmdy, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
+		snprintf(yl, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 32) & 0x1fff) / 4.0f);
+		snprintf(ym, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 16) & 0x1fff) / 4.0f);
+		snprintf(yh, s_element_buf_size, "%4.4f", (float)((cmd[0] >> 0) & 0x1fff) / 4.0f);
+		snprintf(xl, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1] >> 32) / 65536.0f);
+		snprintf(dxldy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[1]) / 65536.0f);
+		snprintf(xh, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2] >> 32) / 65536.0f);
+		snprintf(dxhdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[2]) / 65536.0f);
+		snprintf(xm, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3] >> 32) / 65536.0f);
+		snprintf(dxmdy, s_element_buf_size, "%4.4f", (float)int32_t(cmd[3]) / 65536.0f);
 
-		sprintf(rt, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(gt, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(bt, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(at, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
-		sprintf(drdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dadx, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
-		sprintf(drde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dade, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
-		sprintf(drdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dgdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dbdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dady, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
+		snprintf(rt, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(gt, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(bt, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(at, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] & 0x0000ffff) << 16) | (cmd[6] & 0xffff)) / 65536.0f);
+		snprintf(drdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dadx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] & 0x0000ffff) << 16) | (cmd[7] & 0xffff)) / 65536.0f);
+		snprintf(drde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dade, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] & 0x0000ffff) << 16) | (cmd[10] & 0xffff)) / 65536.0f);
+		snprintf(drdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dgdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dbdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dady, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] & 0x0000ffff) << 16) | (cmd[11] & 0xffff)) / 65536.0f);
 
-		sprintf(s, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(t, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(w, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdx, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdx, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdx, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsde, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtde, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwde, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
-		sprintf(dsdy, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
-		sprintf(dtdy, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
-		sprintf(dwdy, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(s, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[4] >> 32) & 0xffff0000) | ((cmd[6] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(t, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[4] >> 32) & 0x0000ffff) << 16) | ((cmd[6] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(w, s_element_buf_size, "%4.4f", (float)int32_t((cmd[4] & 0xffff0000) | ((cmd[6] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdx, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[5] >> 32) & 0xffff0000) | ((cmd[7] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdx, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[5] >> 32) & 0x0000ffff) << 16) | ((cmd[7] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdx, s_element_buf_size, "%4.4f", (float)int32_t((cmd[5] & 0xffff0000) | ((cmd[7] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsde, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[8] >> 32) & 0xffff0000) | ((cmd[10] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtde, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[8] >> 32) & 0x0000ffff) << 16) | ((cmd[10] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwde, s_element_buf_size, "%4.4f", (float)int32_t((cmd[8] & 0xffff0000) | ((cmd[10] >> 16) & 0xffff)) / 65536.0f);
+		snprintf(dsdy, s_element_buf_size, "%4.4f", (float)int32_t(((cmd[9] >> 32) & 0xffff0000) | ((cmd[11] >> 48) & 0xffff)) / 65536.0f);
+		snprintf(dtdy, s_element_buf_size, "%4.4f", (float)int32_t((((cmd[9] >> 32) & 0x0000ffff) << 16) | ((cmd[11] >> 32) & 0xffff)) / 65536.0f);
+		snprintf(dwdy, s_element_buf_size, "%4.4f", (float)int32_t((cmd[9] & 0xffff0000) | ((cmd[11] >> 16) & 0xffff)) / 65536.0f);
 
-		buffer += sprintf(buffer, "Tri_TexShadeZ           %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n", lft, xl, xm, xh, yl, ym, yh);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       R: %s, G: %s, B: %s, A: %s\n", rt, gt, bt, at);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n", drdx, dgdx, dbdx, dadx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n", drde, dgde, dbde, dade);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n", drdy, dgdy, dbdy, dady);
-
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       S: %s, T: %s, W: %s\n", s, t, w);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDX: %s, DTDX: %s, DWDX: %s\n", dsdx, dtdx, dwdx);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDE: %s, DTDE: %s, DWDE: %s\n", dsde, dtde, dwde);
-		buffer += sprintf(buffer, "                              ");
-		buffer += sprintf(buffer, "                       DSDY: %s, DTDY: %s, DWDY: %s\n", dsdy, dtdy, dwdy);
+		snprintf(buffer, buf_size, "Tri_TexShadeZ           %d, XL: %s, XM: %s, XH: %s, YL: %s, YM: %s, YH: %s\n"
+			"                              "
+			"                       R: %s, G: %s, B: %s, A: %s\n"
+			"                              "
+			"                       DRDX: %s, DGDX: %s, DBDX: %s, DADX: %s\n"
+			"                              "
+			"                       DRDE: %s, DGDE: %s, DBDE: %s, DADE: %s\n"
+			"                              "
+			"                       DRDY: %s, DGDY: %s, DBDY: %s, DADY: %s\n"
+			"                              "
+			"                       S: %s, T: %s, W: %s\n"
+			"                              "
+			"                       DSDX: %s, DTDX: %s, DWDX: %s\n"
+			"                              "
+			"                       DSDE: %s, DTDE: %s, DWDE: %s\n"
+			"                              "
+			"                       DSDY: %s, DTDY: %s, DWDY: %s\n",
+			lft, xl, xm, xh, yl, ym, yh,
+			rt, gt, bt, at,
+			drdx, dgdx, dbdx, dadx,
+			drde, dgde, dbde, dade,
+			drdy, dgdy, dbdy, dady,
+			s, t, w,
+			dsdx, dtdx, dwdx,
+			dsde, dtde, dwde,
+			dsdy, dtdy, dwdy);
 		break;
 	}
 	case 0x24:
@@ -1453,41 +1484,41 @@ void n64_rdp::disassemble(char* buffer) {
 		}
 
 		cmd[1] = m_cmd_data[m_cmd_cur + 1];
-		sprintf(s, "%4.4f", (float)int16_t((cmd[1] >> 48) & 0xffff) / 32.0f);
-		sprintf(t, "%4.4f", (float)int16_t((cmd[1] >> 32) & 0xffff) / 32.0f);
-		sprintf(dsdx, "%4.4f", (float)int16_t((cmd[1] >> 16) & 0xffff) / 1024.0f);
-		sprintf(dtdy, "%4.4f", (float)int16_t((cmd[1] >> 0) & 0xffff) / 1024.0f);
+		snprintf(s, s_element_buf_size, "%4.4f", (float)int16_t((cmd[1] >> 48) & 0xffff) / 32.0f);
+		snprintf(t, s_element_buf_size, "%4.4f", (float)int16_t((cmd[1] >> 32) & 0xffff) / 32.0f);
+		snprintf(dsdx, s_element_buf_size, "%4.4f", (float)int16_t((cmd[1] >> 16) & 0xffff) / 1024.0f);
+		snprintf(dtdy, s_element_buf_size, "%4.4f", (float)int16_t((cmd[1] >> 0) & 0xffff) / 1024.0f);
 
 		if (command == 0x24)
-			sprintf(buffer, "Texture_Rectangle      %d, %s, %s, %s, %s,  %s, %s, %s, %s", tile, sh, th, sl, tl, s, t, dsdx, dtdy);
+			snprintf(buffer, buf_size, "Texture_Rectangle      %d, %s, %s, %s, %s,  %s, %s, %s, %s", tile, sh, th, sl, tl, s, t, dsdx, dtdy);
 		else
-			sprintf(buffer, "Texture_Rectangle_Flip %d, %s, %s, %s, %s,  %s, %s, %s, %s", tile, sh, th, sl, tl, s, t, dsdx, dtdy);
+			snprintf(buffer, buf_size, "Texture_Rectangle_Flip %d, %s, %s, %s, %s,  %s, %s, %s, %s", tile, sh, th, sl, tl, s, t, dsdx, dtdy);
 
 		break;
 	}
-	case 0x26:  sprintf(buffer, "Sync_Load"); break;
-	case 0x27:  sprintf(buffer, "Sync_Pipe"); break;
-	case 0x28:  sprintf(buffer, "Sync_Tile"); break;
-	case 0x29:  sprintf(buffer, "Sync_Full"); break;
-	case 0x2d:  sprintf(buffer, "Set_Scissor            %s, %s, %s, %s", sl, tl, sh, th); break;
-	case 0x2e:  sprintf(buffer, "Set_Prim_Depth         %04X, %04X", uint32_t(cmd[0] >> 16) & 0xffff, (uint32_t)cmd[0] & 0xffff); break;
-	case 0x2f:  sprintf(buffer, "Set_Other_Modes        %08X %08X", uint32_t(cmd[0] >> 32), (uint32_t)cmd[0]); break;
-	case 0x30:  sprintf(buffer, "Load_TLUT              %d, %s, %s, %s, %s", tile, sl, tl, sh, th); break;
-	case 0x32:  sprintf(buffer, "Set_Tile_Size          %d, %s, %s, %s, %s", tile, sl, tl, sh, th); break;
-	case 0x33:  sprintf(buffer, "Load_Block             %d, %03X, %03X, %03X, %03X", tile, uint32_t(cmd[0] >> 44) & 0xfff, uint32_t(cmd[0] >> 32) & 0xfff, uint32_t(cmd[0] >> 12) & 0xfff, uint32_t(cmd[1]) & 0xfff); break;
-	case 0x34:  sprintf(buffer, "Load_Tile              %d, %s, %s, %s, %s", tile, sl, tl, sh, th); break;
-	case 0x35:  sprintf(buffer, "Set_Tile               %d, %s, %s, %d, %04X", tile, format, size, (uint32_t(cmd[0] >> 41) & 0x1ff) * 8, (uint32_t(cmd[0] >> 32) & 0x1ff) * 8); break;
-	case 0x36:  sprintf(buffer, "Fill_Rectangle         %s, %s, %s, %s", sh, th, sl, tl); break;
-	case 0x37:  sprintf(buffer, "Set_Fill_Color         R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
-	case 0x38:  sprintf(buffer, "Set_Fog_Color          R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
-	case 0x39:  sprintf(buffer, "Set_Blend_Color        R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
-	case 0x3a:  sprintf(buffer, "Set_Prim_Color         %d, %d, R: %d, G: %d, B: %d, A: %d", uint32_t(cmd[0] >> 40) & 0x1f, uint32_t(cmd[0] >> 32) & 0xff, r, g, b, a); break;
-	case 0x3b:  sprintf(buffer, "Set_Env_Color          R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
-	case 0x3c:  sprintf(buffer, "Set_Combine            %08X %08X", uint32_t(cmd[0] >> 32), (uint32_t)cmd[0]); break;
-	case 0x3d:  sprintf(buffer, "Set_Texture_Image      %s, %s, %d, %08X", format, size, (uint32_t(cmd[0] >> 32) & 0x1ff) + 1, (uint32_t)cmd[0]); break;
-	case 0x3e:  sprintf(buffer, "Set_Mask_Image         %08X", (uint32_t)cmd[0]); break;
-	case 0x3f:  sprintf(buffer, "Set_Color_Image        %s, %s, %d, %08X", format, size, (uint32_t(cmd[0] >> 32) & 0x1ff) + 1, (uint32_t)cmd[0]); break;
-	default:    sprintf(buffer, "Unknown (%08X %08X)", uint32_t(cmd[0] >> 32), (uint32_t)cmd[0]); break;
+	case 0x26:  snprintf(buffer, buf_size, "Sync_Load"); break;
+	case 0x27:  snprintf(buffer, buf_size, "Sync_Pipe"); break;
+	case 0x28:  snprintf(buffer, buf_size, "Sync_Tile"); break;
+	case 0x29:  snprintf(buffer, buf_size, "Sync_Full"); break;
+	case 0x2d:  snprintf(buffer, buf_size, "Set_Scissor            %s, %s, %s, %s", sl, tl, sh, th); break;
+	case 0x2e:  snprintf(buffer, buf_size, "Set_Prim_Depth         %04X, %04X", uint32_t(cmd[0] >> 16) & 0xffff, (uint32_t)cmd[0] & 0xffff); break;
+	case 0x2f:  snprintf(buffer, buf_size, "Set_Other_Modes        %08X %08X", uint32_t(cmd[0] >> 32), (uint32_t)cmd[0]); break;
+	case 0x30:  snprintf(buffer, buf_size, "Load_TLUT              %d, %s, %s, %s, %s", tile, sl, tl, sh, th); break;
+	case 0x32:  snprintf(buffer, buf_size, "Set_Tile_Size          %d, %s, %s, %s, %s", tile, sl, tl, sh, th); break;
+	case 0x33:  snprintf(buffer, buf_size, "Load_Block             %d, %03X, %03X, %03X, %03X", tile, uint32_t(cmd[0] >> 44) & 0xfff, uint32_t(cmd[0] >> 32) & 0xfff, uint32_t(cmd[0] >> 12) & 0xfff, uint32_t(cmd[1]) & 0xfff); break;
+	case 0x34:  snprintf(buffer, buf_size, "Load_Tile              %d, %s, %s, %s, %s", tile, sl, tl, sh, th); break;
+	case 0x35:  snprintf(buffer, buf_size, "Set_Tile               %d, %s, %s, %d, %04X", tile, format, size, (uint32_t(cmd[0] >> 41) & 0x1ff) * 8, (uint32_t(cmd[0] >> 32) & 0x1ff) * 8); break;
+	case 0x36:  snprintf(buffer, buf_size, "Fill_Rectangle         %s, %s, %s, %s", sh, th, sl, tl); break;
+	case 0x37:  snprintf(buffer, buf_size, "Set_Fill_Color         R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
+	case 0x38:  snprintf(buffer, buf_size, "Set_Fog_Color          R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
+	case 0x39:  snprintf(buffer, buf_size, "Set_Blend_Color        R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
+	case 0x3a:  snprintf(buffer, buf_size, "Set_Prim_Color         %d, %d, R: %d, G: %d, B: %d, A: %d", uint32_t(cmd[0] >> 40) & 0x1f, uint32_t(cmd[0] >> 32) & 0xff, r, g, b, a); break;
+	case 0x3b:  snprintf(buffer, buf_size, "Set_Env_Color          R: %d, G: %d, B: %d, A: %d", r, g, b, a); break;
+	case 0x3c:  snprintf(buffer, buf_size, "Set_Combine            %08X %08X", uint32_t(cmd[0] >> 32), (uint32_t)cmd[0]); break;
+	case 0x3d:  snprintf(buffer, buf_size, "Set_Texture_Image      %s, %s, %d, %08X", format, size, (uint32_t(cmd[0] >> 32) & 0x1ff) + 1, (uint32_t)cmd[0]); break;
+	case 0x3e:  snprintf(buffer, buf_size, "Set_Mask_Image         %08X", (uint32_t)cmd[0]); break;
+	case 0x3f:  snprintf(buffer, buf_size, "Set_Color_Image        %s, %s, %d, %08X", format, size, (uint32_t(cmd[0] >> 32) & 0x1ff) + 1, (uint32_t)cmd[0]); break;
+	default:    snprintf(buffer, buf_size, "Unknown (%08X %08X)", uint32_t(cmd[0] >> 32), (uint32_t)cmd[0]); break;
 	}
 }
 
@@ -1822,7 +1853,7 @@ void n64_rdp::draw_triangle(bool shade, bool texture, bool zbuffer, bool rect) {
 		const int32_t xstart = xleft >> 16;
 		const int32_t xend = xright >> 16;
 		const int32_t j = k >> 2;
-		const int32_t spanidx = (k - ycur) >> 2;
+		const int32_t spanidx = k >> 2;
 		const int32_t  spix = k & 3;
 		bool valid_y = !(k < yh || k >= yl);
 
@@ -1893,8 +1924,25 @@ void n64_rdp::draw_triangle(bool shade, bool texture, bool zbuffer, bool rect) {
 		}
 
 		if (spix == 3) {
-			if (spanidx >= m_scissor.m_yh && spanidx < m_scissor.m_yl)
-				render_span(spanidx, flip, tilenum);
+			if (spanidx >= m_scissor.m_yh && spanidx < m_scissor.m_yl) {
+				switch (m_other_modes.cycle_type) {
+				case CYCLE_TYPE_1:
+					span_draw_1cycle(spanidx, flip, tilenum);
+					break;
+
+				case CYCLE_TYPE_2:
+					span_draw_2cycle(spanidx, flip, tilenum);
+					break;
+
+				case CYCLE_TYPE_COPY:
+					span_draw_copy(spanidx, flip, tilenum);
+					break;
+
+				case CYCLE_TYPE_FILL:
+					span_draw_fill(spanidx, flip, tilenum);
+					break;
+				}
+			}
 			r += drde;
 			g += dgde;
 			b += dbde;
@@ -1915,41 +1963,36 @@ void n64_rdp::draw_triangle(bool shade, bool texture, bool zbuffer, bool rect) {
 // RDP COMMANDS
 ////////////////////////
 
-void n64_rdp::triangle(bool shade, bool texture, bool zbuffer) {
-	draw_triangle(shade, texture, zbuffer, false);
-	m_pipe_clean = false;
-}
-
 void n64_rdp::cmd_triangle(uint64_t w1) {
-	triangle(false, false, false);
+	draw_triangle(false, false, false, false);
 }
 
 void n64_rdp::cmd_triangle_z(uint64_t w1) {
-	triangle(false, false, true);
+	draw_triangle(false, false, true, false);
 }
 
 void n64_rdp::cmd_triangle_t(uint64_t w1) {
-	triangle(false, true, false);
+	draw_triangle(false, true, false, false);
 }
 
 void n64_rdp::cmd_triangle_tz(uint64_t w1) {
-	triangle(false, true, true);
+	draw_triangle(false, true, true, false);
 }
 
 void n64_rdp::cmd_triangle_s(uint64_t w1) {
-	triangle(true, false, false);
+	draw_triangle(true, false, false, false);
 }
 
 void n64_rdp::cmd_triangle_sz(uint64_t w1) {
-	triangle(true, false, true);
+	draw_triangle(true, false, true, false);
 }
 
 void n64_rdp::cmd_triangle_st(uint64_t w1) {
-	triangle(true, true, false);
+	draw_triangle(true, true, false, false);
 }
 
 void n64_rdp::cmd_triangle_stz(uint64_t w1) {
-	triangle(true, true, true);
+	draw_triangle(true, true, true, false);
 }
 
 void n64_rdp::cmd_tex_rect(uint64_t w1) {
@@ -2066,7 +2109,6 @@ void n64_rdp::cmd_set_fill_color32(uint64_t w1) {
 }
 
 void n64_rdp::cmd_set_convert(uint64_t w1) {
-	if (!m_pipe_clean) { m_pipe_clean = true; }
 	int32_t k0 = int32_t(w1 >> 45) & 0x1ff;
 	int32_t k1 = int32_t(w1 >> 36) & 0x1ff;
 	int32_t k2 = int32_t(w1 >> 27) & 0x1ff;
@@ -2152,8 +2194,7 @@ void n64_rdp::cmd_load_tlut(uint64_t w1) {
 		printf("Load tlut: tl=%d, th=%d\n", tl, th);
 	}
 
-	m_capture.data_begin();
-	Logger::Log("b");
+	m_capture->data_begin();
 
 	const int32_t count = ((sh >> 2) - (sl >> 2) + 1) << 2;
 
@@ -2169,8 +2210,7 @@ void n64_rdp::cmd_load_tlut(uint64_t w1) {
 
 		for (int32_t i = 0; i < count; i += 4) {
 			if (dststart < 2048) {
-				dst[dststart] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", dst[dststart]);
+				dst[dststart] = m_capture->data_block()->get16();
 				dst[dststart + 1] = dst[dststart];
 				dst[dststart + 2] = dst[dststart];
 				dst[dststart + 3] = dst[dststart];
@@ -2185,9 +2225,8 @@ void n64_rdp::cmd_load_tlut(uint64_t w1) {
 		break;
 	}
 
-	m_capture.data_end();
-	m_capture.data_block()->reset();
-	Logger::Log("\n");
+	m_capture->data_end();
+	m_capture->data_block()->reset();
 
 	m_tiles[tilenum].sth = rgbaint_t(m_tiles[tilenum].sh, m_tiles[tilenum].sh, m_tiles[tilenum].th, m_tiles[tilenum].th);
 	m_tiles[tilenum].stl = rgbaint_t(m_tiles[tilenum].sl, m_tiles[tilenum].sl, m_tiles[tilenum].tl, m_tiles[tilenum].tl);
@@ -2238,8 +2277,7 @@ void n64_rdp::cmd_load_block(uint64_t w1) {
 
 	const uint32_t src = (m_misc_state.m_ti_address >> 1) + (tl * tiwinwords) + slinwords;
 
-	m_capture.data_begin();
-	Logger::Log("b");
+	m_capture->data_begin();
 
 	if (dxt != 0) {
 		int32_t j = 0;
@@ -2257,14 +2295,10 @@ void n64_rdp::cmd_load_block(uint64_t w1) {
 				int32_t ptr = tb + (i << 2);
 				int32_t srcptr = src + (i << 2);
 
-				tc[(ptr ^ t) & 0x7ff] = m_capture.data_block()->get16();
-				tc[((ptr + 1) ^ t) & 0x7ff] = m_capture.data_block()->get16();
-				tc[((ptr + 2) ^ t) & 0x7ff] = m_capture.data_block()->get16();
-				tc[((ptr + 3) ^ t) & 0x7ff] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", tc[((ptr + 0) ^ t) & 0x7ff]);
-				Logger::Log(" %04x", tc[((ptr + 1) ^ t) & 0x7ff]);
-				Logger::Log(" %04x", tc[((ptr + 2) ^ t) & 0x7ff]);
-				Logger::Log(" %04x", tc[((ptr + 3) ^ t) & 0x7ff]);
+				tc[(ptr ^ t) & 0x7ff] = m_capture->data_block()->get16();
+				tc[((ptr + 1) ^ t) & 0x7ff] = m_capture->data_block()->get16();
+				tc[((ptr + 2) ^ t) & 0x7ff] = m_capture->data_block()->get16();
+				tc[((ptr + 3) ^ t) & 0x7ff] = m_capture->data_block()->get16();
 
 				j += dxt;
 			}
@@ -2279,20 +2313,16 @@ void n64_rdp::cmd_load_block(uint64_t w1) {
 				int32_t ptr = ((tb + (i << 1)) ^ t) & 0x3ff;
 				int32_t srcptr = src + (i << 2);
 
-				int32_t first = m_capture.data_block()->get16();
-				int32_t sec = m_capture.data_block()->get16();
+				int32_t first = m_capture->data_block()->get16();
+				int32_t sec = m_capture->data_block()->get16();
 				tc[ptr] = ((first >> 8) << 8) | (sec >> 8);
 				tc[ptr | 0x400] = ((first & 0xff) << 8) | (sec & 0xff);
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
 
 				ptr = ((tb + (i << 1) + 1) ^ t) & 0x3ff;
-				first = m_capture.data_block()->get16();
-				sec = m_capture.data_block()->get16();
+				first = m_capture->data_block()->get16();
+				sec = m_capture->data_block()->get16();
 				tc[ptr] = ((first >> 8) << 8) | (sec >> 8);
 				tc[ptr | 0x400] = ((first & 0xff) << 8) | (sec & 0xff);
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
 
 				j += dxt;
 			}
@@ -2305,16 +2335,12 @@ void n64_rdp::cmd_load_block(uint64_t w1) {
 
 				int32_t ptr = ((tb + (i << 1)) ^ t) & 0x3ff;
 				int32_t srcptr = src + (i << 2);
-				tc[ptr] = m_capture.data_block()->get16();
-				tc[ptr | 0x400] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
+				tc[ptr] = m_capture->data_block()->get16();
+				tc[ptr | 0x400] = m_capture->data_block()->get16();
 
 				ptr = ((tb + (i << 1) + 1) ^ t) & 0x3ff;
-				tc[ptr] = m_capture.data_block()->get16();
-				tc[ptr | 0x400] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
+				tc[ptr] = m_capture->data_block()->get16();
+				tc[ptr | 0x400] = m_capture->data_block()->get16();
 
 				j += dxt;
 			}
@@ -2325,56 +2351,43 @@ void n64_rdp::cmd_load_block(uint64_t w1) {
 			for (int32_t i = 0; i < width; i++) {
 				int32_t ptr = tb + (i << 2);
 				int32_t srcptr = src + (i << 2);
-				tc[(ptr ^ WORD_ADDR_XOR) & 0x7ff] = m_capture.data_block()->get16();
-				tc[((ptr + 1) ^ WORD_ADDR_XOR) & 0x7ff] = m_capture.data_block()->get16();
-				tc[((ptr + 2) ^ WORD_ADDR_XOR) & 0x7ff] = m_capture.data_block()->get16();
-				tc[((ptr + 3) ^ WORD_ADDR_XOR) & 0x7ff] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", tc[((ptr + 0) ^ WORD_ADDR_XOR) & 0x7ff]);
-				Logger::Log(" %04x", tc[((ptr + 1) ^ WORD_ADDR_XOR) & 0x7ff]);
-				Logger::Log(" %04x", tc[((ptr + 2) ^ WORD_ADDR_XOR) & 0x7ff]);
-				Logger::Log(" %04x", tc[((ptr + 3) ^ WORD_ADDR_XOR) & 0x7ff]);
+				tc[(ptr ^ WORD_ADDR_XOR) & 0x7ff] = m_capture->data_block()->get16();
+				tc[((ptr + 1) ^ WORD_ADDR_XOR) & 0x7ff] = m_capture->data_block()->get16();
+				tc[((ptr + 2) ^ WORD_ADDR_XOR) & 0x7ff] = m_capture->data_block()->get16();
+				tc[((ptr + 3) ^ WORD_ADDR_XOR) & 0x7ff] = m_capture->data_block()->get16();
 			}
 		} else if (tile[tilenum].format == FORMAT_YUV) {
 			for (int32_t i = 0; i < width; i++) {
 				int32_t ptr = ((tb + (i << 1)) ^ WORD_ADDR_XOR) & 0x3ff;
 				int32_t srcptr = src + (i << 2);
-				int32_t first = m_capture.data_block()->get16();
-				int32_t sec = m_capture.data_block()->get16();
+				int32_t first = m_capture->data_block()->get16();
+				int32_t sec = m_capture->data_block()->get16();
 				tc[ptr] = ((first >> 8) << 8) | (sec >> 8);//UV pair
 				tc[ptr | 0x400] = ((first & 0xff) << 8) | (sec & 0xff);
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
 
 				ptr = ((tb + (i << 1) + 1) ^ WORD_ADDR_XOR) & 0x3ff;
-				first = m_capture.data_block()->get16();
-				sec = m_capture.data_block()->get16();
+				first = m_capture->data_block()->get16();
+				sec = m_capture->data_block()->get16();
 				tc[ptr] = ((first >> 8) << 8) | (sec >> 8);
 				tc[ptr | 0x400] = ((first & 0xff) << 8) | (sec & 0xff);
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
 			}
 		} else {
 			for (int32_t i = 0; i < width; i++) {
 				int32_t ptr = ((tb + (i << 1)) ^ WORD_ADDR_XOR) & 0x3ff;
 				int32_t srcptr = src + (i << 2);
-				tc[ptr] = m_capture.data_block()->get16();
-				tc[ptr | 0x400] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
+				tc[ptr] = m_capture->data_block()->get16();
+				tc[ptr | 0x400] = m_capture->data_block()->get16();
 
 				ptr = ((tb + (i << 1) + 1) ^ WORD_ADDR_XOR) & 0x3ff;
-				tc[ptr] = m_capture.data_block()->get16();
-				tc[ptr | 0x400] = m_capture.data_block()->get16();
-				Logger::Log(" %04x", tc[ptr]);
-				Logger::Log(" %04x", tc[ptr | 0x400]);
+				tc[ptr] = m_capture->data_block()->get16();
+				tc[ptr | 0x400] = m_capture->data_block()->get16();
 			}
 		}
 		tile[tilenum].th = tl;
 	}
 
-	m_capture.data_end();
-	m_capture.data_block()->reset();
-	Logger::Log("\n");
+	m_capture->data_end();
+	m_capture->data_block()->reset();
 
 	m_tiles[tilenum].sth = rgbaint_t(m_tiles[tilenum].sh, m_tiles[tilenum].sh, m_tiles[tilenum].th, m_tiles[tilenum].th);
 	m_tiles[tilenum].stl = rgbaint_t(m_tiles[tilenum].sl, m_tiles[tilenum].sl, m_tiles[tilenum].tl, m_tiles[tilenum].tl);
@@ -2410,8 +2423,7 @@ void n64_rdp::cmd_load_tile(uint64_t w1) {
 	topad = 0; // ????
 	*/
 
-	m_capture.data_begin();
-	Logger::Log("b");
+	m_capture->data_begin();
 
 	switch (m_misc_state.m_ti_size) {
 	case PIXEL_SIZE_8BIT:
@@ -2426,8 +2438,7 @@ void n64_rdp::cmd_load_tile(uint64_t w1) {
 			const int32_t xorval8 = ((j & 1) ? BYTE_XOR_DWORD_SWAP : BYTE_ADDR_XOR);
 
 			for (int32_t i = 0; i < width; i++) {
-				const uint8_t data = m_capture.data_block()->get8();
-				Logger::Log(" %02x", data);
+				const uint8_t data = m_capture->data_block()->get8();
 				tc[((tline + i) ^ xorval8) & 0xfff] = data;
 			}
 		}
@@ -2447,8 +2458,7 @@ void n64_rdp::cmd_load_tile(uint64_t w1) {
 
 				for (int32_t i = 0; i < width; i++) {
 					const uint32_t taddr = (tline + i) ^ xorval16;
-					const uint16_t data = m_capture.data_block()->get16();
-					Logger::Log(" %04x", data);
+					const uint16_t data = m_capture->data_block()->get16();
 					tc[taddr & 0x7ff] = data;
 				}
 			}
@@ -2461,8 +2471,7 @@ void n64_rdp::cmd_load_tile(uint64_t w1) {
 
 				for (int32_t i = 0; i < width; i++) {
 					uint32_t taddr = ((tline + i) ^ xorval8) & 0x7ff;
-					uint16_t yuvword = m_capture.data_block()->get16();
-					Logger::Log(" %04x", yuvword);
+					uint16_t yuvword = m_capture->data_block()->get16();
 					get_tmem8()[taddr] = yuvword >> 8;
 					get_tmem8()[taddr | 0x800] = yuvword & 0xff;
 				}
@@ -2482,8 +2491,7 @@ void n64_rdp::cmd_load_tile(uint64_t w1) {
 			const int32_t s = ((j + tl) * m_misc_state.m_ti_width) + sl;
 			const int32_t xorval32cur = (j & 1) ? WORD_XOR_DWORD_SWAP : WORD_ADDR_XOR;
 			for (int32_t i = 0; i < width; i++) {
-				uint32_t c = m_capture.data_block()->get32();
-				Logger::Log(" %08x", c);
+				uint32_t c = m_capture->data_block()->get32();
 				uint32_t ptr = ((tline + i) ^ xorval32cur) & 0x3ff;
 				tc16[ptr] = c >> 16;
 				tc16[ptr | 0x400] = c & 0xffff;
@@ -2496,9 +2504,8 @@ void n64_rdp::cmd_load_tile(uint64_t w1) {
 		printf("RDP: load_tile: size = %d\n", m_misc_state.m_ti_size);
 	}
 
-	m_capture.data_end();
-	m_capture.data_block()->reset();
-	Logger::Log("\n");
+	m_capture->data_end();
+	m_capture->data_block()->reset();
 
 	m_tiles[tilenum].sth = rgbaint_t(m_tiles[tilenum].sh, m_tiles[tilenum].sh, m_tiles[tilenum].th, m_tiles[tilenum].th);
 	m_tiles[tilenum].stl = rgbaint_t(m_tiles[tilenum].sl, m_tiles[tilenum].sl, m_tiles[tilenum].tl, m_tiles[tilenum].tl);
@@ -2661,103 +2668,107 @@ void n64_rdp::cmd_noop(uint64_t w1) {
 
 
 void n64_rdp::process_command_list() {
-	while (m_capture.commands_left() > 0) {
-		pin64_data_t* data = m_capture.command()->data();
-		const uint32_t length = data->get32(0);
-		
-		m_cmd_ptr = 0;
-		// load command data
-		Logger::Log("c");
-		for (uint32_t i = 0; i < length; i++) {
-			uint64_t val = data->get64(4 + i * 8);
-			m_cmd_data[m_cmd_ptr++] = val;
-			Logger::Log(" %08x%08x", (uint32_t)(val >> 32), (uint32_t)val);
-		}
-		Logger::Log("\n");
-
-		uint32_t cmd = (m_cmd_data[0] >> 56) & 0x3f;
-		uint32_t cmd_length = length * 8;
-
-		// check if more data is needed
-		if (cmd_length < s_rdp_command_length[cmd]) {
-			return;
-		}
-
-		m_cmd_cur = 0;
-
-		if (((m_cmd_ptr - m_cmd_cur) * 8) < s_rdp_command_length[cmd]) {
-			return;
-			//fatalerror("rdp_process_list: not enough rdp command data: cur = %d, ptr = %d, expected = %d\n", m_cmd_cur, m_cmd_ptr, s_rdp_command_length[cmd]);
-		}
-
-		m_capture.command(&m_cmd_data[m_cmd_cur], s_rdp_command_length[cmd] / 8);
-
-		if (LOG_RDP_EXECUTION) {
-			char string[4000];
-			disassemble(string);
-
-			fprintf(rdp_exec, "%08X: %08X%08X   %s\n", m_start + (m_cmd_cur * 8), uint32_t(m_cmd_data[m_cmd_cur] >> 32), (uint32_t)m_cmd_data[m_cmd_cur], string);
-			fflush(rdp_exec);
-		}
-
-		// execute the command
-		uint64_t w = m_cmd_data[m_cmd_cur];
-
-		switch (cmd) {
-		case 0x00:  cmd_noop(w);           break;
-
-		case 0x08:  cmd_triangle(w);       break;
-		case 0x09:  cmd_triangle_z(w);     break;
-		case 0x0a:  cmd_triangle_t(w);     break;
-		case 0x0b:  cmd_triangle_tz(w);    break;
-		case 0x0c:  cmd_triangle_s(w);     break;
-		case 0x0d:  cmd_triangle_sz(w);    break;
-		case 0x0e:  cmd_triangle_st(w);    break;
-		case 0x0f:  cmd_triangle_stz(w);   break;
-
-		case 0x24:  cmd_tex_rect(w);       break;
-		case 0x25:  cmd_tex_rect_flip(w);  break;
-
-		case 0x26:  cmd_sync_load(w);      break;
-		case 0x27:  cmd_sync_pipe(w);      break;
-		case 0x28:  cmd_sync_tile(w);      break;
-		case 0x29:  cmd_sync_full(w);      break;
-
-		case 0x2a:  cmd_set_key_gb(w);     break;
-		case 0x2b:  cmd_set_key_r(w);      break;
-
-		case 0x2c:  cmd_set_convert(w);    break;
-		case 0x3c:  cmd_set_combine(w);    break;
-		case 0x2d:  cmd_set_scissor(w);    break;
-		case 0x2e:  cmd_set_prim_depth(w); break;
-		case 0x2f:  cmd_set_other_modes(w); break;
-
-		case 0x30:  cmd_load_tlut(w);      break;
-		case 0x33:  cmd_load_block(w);     break;
-		case 0x34:  cmd_load_tile(w);      break;
-
-		case 0x32:  cmd_set_tile_size(w);  break;
-		case 0x35:  cmd_set_tile(w);       break;
-
-		case 0x36:  cmd_fill_rect(w);      break;
-
-		case 0x37:  cmd_set_fill_color32(w); break;
-		case 0x38:  cmd_set_fog_color(w);  break;
-		case 0x39:  cmd_set_blend_color(w); break;
-		case 0x3a:  cmd_set_prim_color(w); break;
-		case 0x3b:  cmd_set_env_color(w);  break;
-
-		case 0x3d:  cmd_set_texture_image(w); break;
-		case 0x3e:  cmd_set_mask_image(w);  break;
-		case 0x3f:  cmd_set_color_image(w); break;
-		}
-
-		m_capture.next_command();
+	while (commands_available()) {
+		process_command();
+		m_capture->next_command();
 	};
+	reset();
+}
+
+void n64_rdp::reset() {
 	m_cmd_ptr = 0;
 	m_cmd_cur = 0;
 
 	m_start = m_current = m_end;
+}
+
+void n64_rdp::process_command() {
+	pin64_data_t* data = m_capture->command()->data();
+	const uint32_t length = data->get32(0);
+
+	m_cmd_ptr = 0;
+	// load command data
+	for (uint32_t i = 0; i < length; i++) {
+		uint64_t val = data->get64(4 + i * 8);
+		m_cmd_data[m_cmd_ptr++] = val;
+	}
+
+	uint32_t cmd = (m_cmd_data[0] >> 56) & 0x3f;
+	uint32_t cmd_length = length * 8;
+
+	// check if more data is needed
+	if (cmd_length < s_rdp_command_length[cmd]) {
+		return;
+	}
+
+	m_cmd_cur = 0;
+
+	if (((m_cmd_ptr - m_cmd_cur) * 8) < s_rdp_command_length[cmd]) {
+		return;
+		//fatalerror("rdp_process_list: not enough rdp command data: cur = %d, ptr = %d, expected = %d\n", m_cmd_cur, m_cmd_ptr, s_rdp_command_length[cmd]);
+	}
+
+	m_capture->command(&m_cmd_data[m_cmd_cur], s_rdp_command_length[cmd] / 8);
+
+	if (LOG_RDP_EXECUTION) {
+		char string[4000];
+		disassemble(string, 4000);
+
+		fprintf(rdp_exec, "%08X: %08X%08X   %s\n", m_start + (m_cmd_cur * 8), uint32_t(m_cmd_data[m_cmd_cur] >> 32), (uint32_t)m_cmd_data[m_cmd_cur], string);
+		fflush(rdp_exec);
+	}
+
+	// execute the command
+	uint64_t w = m_cmd_data[m_cmd_cur];
+
+	switch (cmd) {
+	case 0x00:  cmd_noop(w);           break;
+
+	case 0x08:  cmd_triangle(w);       break;
+	case 0x09:  cmd_triangle_z(w);     break;
+	case 0x0a:  cmd_triangle_t(w);     break;
+	case 0x0b:  cmd_triangle_tz(w);    break;
+	case 0x0c:  cmd_triangle_s(w);     break;
+	case 0x0d:  cmd_triangle_sz(w);    break;
+	case 0x0e:  cmd_triangle_st(w);    break;
+	case 0x0f:  cmd_triangle_stz(w);   break;
+
+	case 0x24:  cmd_tex_rect(w);       break;
+	case 0x25:  cmd_tex_rect_flip(w);  break;
+
+	case 0x26:  cmd_sync_load(w);      break;
+	case 0x27:  cmd_sync_pipe(w);      break;
+	case 0x28:  cmd_sync_tile(w);      break;
+	case 0x29:  cmd_sync_full(w);      break;
+
+	case 0x2a:  cmd_set_key_gb(w);     break;
+	case 0x2b:  cmd_set_key_r(w);      break;
+
+	case 0x2c:  cmd_set_convert(w);    break;
+	case 0x3c:  cmd_set_combine(w);    break;
+	case 0x2d:  cmd_set_scissor(w);    break;
+	case 0x2e:  cmd_set_prim_depth(w); break;
+	case 0x2f:  cmd_set_other_modes(w); break;
+
+	case 0x30:  cmd_load_tlut(w);      break;
+	case 0x33:  cmd_load_block(w);     break;
+	case 0x34:  cmd_load_tile(w);      break;
+
+	case 0x32:  cmd_set_tile_size(w);  break;
+	case 0x35:  cmd_set_tile(w);       break;
+
+	case 0x36:  cmd_fill_rect(w);      break;
+
+	case 0x37:  cmd_set_fill_color32(w); break;
+	case 0x38:  cmd_set_fog_color(w);  break;
+	case 0x39:  cmd_set_blend_color(w); break;
+	case 0x3a:  cmd_set_prim_color(w); break;
+	case 0x3b:  cmd_set_env_color(w);  break;
+
+	case 0x3d:  cmd_set_texture_image(w); break;
+	case 0x3e:  cmd_set_mask_image(w);  break;
+	case 0x3f:  cmd_set_color_image(w); break;
+	}
 }
 
 /*****************************************************************************/
@@ -2766,14 +2777,11 @@ n64_rdp::n64_rdp(uint32_t* rdram) {
 	ignore = false;
 	dolog = false;
 
-	m_tex_pipe.init(this);
-
 	m_vi_blank = false;
 	m_rdram = rdram;
 
 	m_aux_buf_ptr = 0;
 	m_aux_buf = nullptr;
-	m_pipe_clean = true;
 
 	m_pending_mode_block = false;
 
@@ -2831,8 +2839,6 @@ n64_rdp::n64_rdp(uint32_t* rdram) {
 	m_compute_cvg[0] = &n64_rdp::compute_cvg_noflip;
 	m_compute_cvg[1] = &n64_rdp::compute_cvg_flip;
 
-	m_blender.set_processor(this);
-
 	for (int32_t i = 0; i < 256; i++) {
 		m_gamma_table[i] = (int32_t)sqrt((float)(i << 6));
 		m_gamma_table[i] <<= 1;
@@ -2842,26 +2848,9 @@ n64_rdp::n64_rdp(uint32_t* rdram) {
 		m_gamma_dither_table[i] = (int32_t)sqrt((float)i);
 		m_gamma_dither_table[i] <<= 1;
 	}
-}
 
-void n64_rdp::render_span(int32_t scanline, bool flip, int tilenum) {
-	switch (m_other_modes.cycle_type) {
-	case CYCLE_TYPE_1:
-		span_draw_1cycle(scanline, flip, tilenum);
-		break;
-
-	case CYCLE_TYPE_2:
-		span_draw_2cycle(scanline, flip, tilenum);
-		break;
-
-	case CYCLE_TYPE_COPY:
-		span_draw_copy(scanline, flip, tilenum);
-		break;
-
-	case CYCLE_TYPE_FILL:
-		span_draw_fill(scanline, flip, tilenum);
-		break;
-	}
+	m_blender.set_processor(this);
+	m_tex_pipe.init(this);
 }
 
 void n64_rdp::rgbaz_clip(int32_t sr, int32_t sg, int32_t sb, int32_t sa, int32_t* sz) {

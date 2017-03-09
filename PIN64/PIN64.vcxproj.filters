@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\pin64">
+      <UniqueIdentifier>{75d23296-259f-4fee-87ee-9b790d900f8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pin64">
+      <UniqueIdentifier>{31400cd1-54ad-4259-9792-19e2c5e7f7b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -39,8 +45,23 @@
     <ClCompile Include="video\rgbsse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pin64.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="pin64\writer.cpp">
+      <Filter>Source Files\pin64</Filter>
+    </ClCompile>
+    <ClCompile Include="pin64\verifier.cpp">
+      <Filter>Source Files\pin64</Filter>
+    </ClCompile>
+    <ClCompile Include="pin64\data.cpp">
+      <Filter>Source Files\pin64</Filter>
+    </ClCompile>
+    <ClCompile Include="pin64\printer.cpp">
+      <Filter>Source Files\pin64</Filter>
+    </ClCompile>
+    <ClCompile Include="pin64\block.cpp">
+      <Filter>Source Files\pin64</Filter>
+    </ClCompile>
+    <ClCompile Include="pin64\pin64.cpp">
+      <Filter>Source Files\pin64</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -77,8 +98,23 @@
     <ClInclude Include="strformat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pin64.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="pin64\writer.h">
+      <Filter>Header Files\pin64</Filter>
+    </ClInclude>
+    <ClInclude Include="pin64\verifier.h">
+      <Filter>Header Files\pin64</Filter>
+    </ClInclude>
+    <ClInclude Include="pin64\data.h">
+      <Filter>Header Files\pin64</Filter>
+    </ClInclude>
+    <ClInclude Include="pin64\printer.h">
+      <Filter>Header Files\pin64</Filter>
+    </ClInclude>
+    <ClInclude Include="pin64\block.h">
+      <Filter>Header Files\pin64</Filter>
+    </ClInclude>
+    <ClInclude Include="pin64\pin64.h">
+      <Filter>Header Files\pin64</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

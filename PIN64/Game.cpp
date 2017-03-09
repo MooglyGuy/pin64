@@ -6,7 +6,9 @@
 Game::Game()
 	: mInitialized(false)
 	, mRunning(false)
-	, mCurrTime(0), mLastTime(0)
+	, mPaused(false)
+	, mCurrTime(0)
+	, mLastTime(0)
 	, mWindow(nullptr)
 	, mRenderer(nullptr)
 	, mFramebuffer(nullptr)
@@ -14,6 +16,7 @@ Game::Game()
 	, mEventDispatcher(nullptr)
 	, mRDRAM(nullptr)
 	, mHiddenRAM(nullptr)
+	, mCapture(nullptr)
 	, mRDP(nullptr) {
 }
 
@@ -22,8 +25,10 @@ Game::~Game() {
 		SDL_DestroyRenderer(mRenderer);
 		SDL_DestroyWindow(mWindow);
 		delete mEventDispatcher;
+		delete mCapture;
 	}
 }
+
 bool Game::Initialize() {
 	mWindow = SDL_CreateWindow("PIN64 v0.00", 100, 100, 640, 480, SDL_WINDOW_SHOWN);
 	if (!mWindow) {
@@ -51,8 +56,11 @@ bool Game::Initialize() {
 	mRDRAM = std::make_unique<uint8_t[]>(8 * 1024 * 1024);
 	mHiddenRAM = std::make_unique<uint8_t[]>(8 * 1024 * 1024);
 	
+	mCapture = new pin64_t();
+	mCapture->play(0);
+
 	mRDP = new n64_rdp((uint32_t*)mRDRAM.get());
-	mRDP->init_internal_state();
+	mRDP->init_internal_state(mCapture);
 
 	return true;
 }
@@ -62,14 +70,27 @@ static double mix(double a, double b, double factor) {
 }
 
 void Game::Render(double delta) {
-	mRDP->screen_update(reinterpret_cast<uint32_t*>(mFB.get()));
+	if (!mPaused) {
+		if (!mCapture->playing()) {
+			mCapture->play(0);
+		} else {
+			if (mRDP->commands_available()) {
+				mRDP->process_command();
+				mCapture->next_command();
+			} else {
+				mCapture->mark_frame(running_machine());
+				
+				mRDP->screen_update(reinterpret_cast<uint32_t*>(mFB.get()));
 
-	SDL_UpdateTexture(mFramebuffer, nullptr, mFB.get(), 640 * 4);
+				SDL_UpdateTexture(mFramebuffer, nullptr, mFB.get(), 640 * 4);
 
-	SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 0xff);
-	SDL_RenderClear(mRenderer);
-	SDL_RenderCopy(mRenderer, mFramebuffer, nullptr, nullptr);
-	SDL_RenderPresent(mRenderer);
+				SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 0xff);
+				SDL_RenderClear(mRenderer);
+				SDL_RenderCopy(mRenderer, mFramebuffer, nullptr, nullptr);
+				SDL_RenderPresent(mRenderer);
+			}
+		}
+	}
 }
 
 void Game::Run() {
@@ -88,8 +109,20 @@ void Game::Run() {
 }
 
 bool Game::HandleEvent(InputEvent event) {
-	if (event.GetType() == EventType_Quit) {
+	switch (event.GetType()) {
+	case EventType_Quit:
 		mRunning = false;
+		return true;
+	case EventType_KeyDown:
+	{
+		KeyDownEvent& keyEvent = reinterpret_cast<KeyDownEvent&>(event);
+		if (keyEvent.key().sym == SDLK_p) {
+			mEventDispatcher->DispatchEvent(PauseEvent());
+		}
+	}
+
+	case EventType_Pause:
+		mPaused = !mPaused;
 		return true;
 	}
 	return false;

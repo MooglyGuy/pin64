@@ -6,6 +6,8 @@ void EventDispatcher::PollEvents() {
 	while (SDL_PollEvent(&event) != 0) {
 		if (event.type == SDL_QUIT) {
 			DispatchEvent(QuitEvent());
+		} else if (event.type == SDL_KEYDOWN) {
+			DispatchEvent(KeyDownEvent(event.key.keysym));
 		}
 	}
 }

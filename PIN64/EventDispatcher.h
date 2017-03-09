@@ -2,9 +2,12 @@
 
 #include <cstdint>
 #include <vector>
+#include <SDL.h>
 
 enum EventType : uint32_t {
 	EventType_Quit,
+	EventType_Pause,
+	EventType_KeyDown,
 
 	EventType_Count
 };
@@ -26,6 +29,26 @@ public:
 	QuitEvent()
 		: InputEvent(EventType_Quit) {
 	}
+};
+
+class PauseEvent : public InputEvent {
+public:
+	PauseEvent()
+		: InputEvent(EventType_Pause) {
+	}
+};
+
+class KeyDownEvent : public InputEvent {
+public:
+	KeyDownEvent(SDL_Keysym key)
+		: InputEvent(EventType_KeyDown)
+		, m_key(key) {
+	}
+
+	SDL_Keysym key() const { return m_key; }
+
+private:
+	SDL_Keysym m_key;
 };
 
 class EventListener {

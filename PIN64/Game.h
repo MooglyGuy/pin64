@@ -25,6 +25,7 @@ private:
 
 	bool mInitialized;
 	bool mRunning;
+	bool mPaused;
 	
 	uint64_t mCurrTime;
 	uint64_t mLastTime;
@@ -38,5 +39,6 @@ private:
 
 	std::unique_ptr<uint8_t[]> mRDRAM;
 	std::unique_ptr<uint8_t[]> mHiddenRAM;
+	pin64_t* mCapture;
 	n64_rdp* mRDP;
 };
